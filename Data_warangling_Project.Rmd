@@ -1,0 +1,509 @@
+---
+title: "Horticulture Data- Table 7.2"
+author: "Sukesh, Satyam and Shyam"
+date: "2023-02-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(cowplot)
+```
+The State Summary section in the report "Horticultural Statistics at a Glance-2018" is a comprehensive collection of data on horticulture crops grown in India. The report, published by the Government of India, Ministry of Agriculture & Farmers’ Welfare Department of Agriculture, Cooperation & Farmers’ Welfare Horticulture Statistics Division, is a valuable resource for anyone interested in understanding the trends and patterns of horticulture crops in India.
+The section contains 16 tables, each providing state-wise statistics of different types of horticulture crops grown in India. The crops covered include fruits, vegetables, flowers, aromatic and medicinal plants, spices, honey, and plantation crops. The data includes information on the area (in '000 Ha) and production (in '000 MT) of these crops for each year from 2013 to 2018.
+
+## Satyam's Data Exploration & Explanation
+
+Contribution: Analysed Tables 07_02_01 to 07_02_05
+
+#### Reading the csv file
+
+```{r}
+crop_data = read_csv("table_07_02_01_satyam.csv")
+```
+
+#### To create a plot of Highest Producer of each Horticulture crop: 2017-18
+Plot by Satyam
+
+```{r}
+min_production <- crop_data %>%
+  group_by(type) %>%
+  summarise(min_production = min(production),
+            state_or_ut = states_or_ut[which.min(production)])
+
+ggplot(min_production, aes(x = type, y = min_production)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  xlab("Type") +
+  ylab("Minimum Production") +
+  ggtitle("Highest Producer of each Horticulture crop: 2017-18") +
+  # Add state/UT names to the top of the bars
+  geom_text(aes(label = state_or_ut), vjust = -0.5, angle = 90, hjust = 0.3) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+ 
+This plot gives the data of top producer of all type of horticulture crops grown in India in 2018, this data will help to understand the horticulture demographics in India
+
+
+
+
+#### Reading the csv file
+
+```{r}
+satyam_table = read_csv("ProjectTables_Satyam_7.2.1.csv", )
+```
+
+#### Converting the production column from character to numric type
+
+```{r}
+satyam_table$production <- as.numeric(satyam_table$production)
+```
+
+#### Creating a plot of Horticulture Vs Area and production
+Plot by Satyam
+
+```{r}
+production_analysis <- aggregate(cbind(area, production) ~ type, data = satyam_table, FUN = function(x) mean(x, na.rm = TRUE))
+
+p <- ggplot(production_analysis, aes(x = type))
+
+p <- p + geom_point(aes(y = area, color = "area"))
+
+p <- p + geom_point(aes(y = production, color = "production"))
+
+p <- p + labs(x = "type", y = "Production", title = "Crop Type Vs Area") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("area" = "green", "production" = "darkblue"))
+
+print(p)
+```
+
+#### Creating a Region vs Production plot to show which region has how much production for fruit crops
+Plot by Satyam
+
+```{r}
+production_by_region <- aggregate(production ~ states_or_ut, data = satyam_table, FUN = mean, na.rm = TRUE)
+
+g2 <- ggplot(production_by_region, aes(x = states_or_ut, y = production)) +labs(x = "Region", y = "Production")
+
+g2 + geom_point(color="red") + coord_flip()
+```
+
+#### Creating a plot of Fruit crops Area and production from 2014 - 18
+Plot by Satyam
+
+```{r}
+satyam_table_2 = read_csv("ProjectTables_Satyam_7.2.2.csv")
+
+satyam_table_2$area <- as.numeric(satyam_table_2$area)
+
+fruits_crop_means <- satyam_table_2 %>%
+  filter(type == "Fruits Crops") %>% # select only rows where type is "Fruits Crops"
+  group_by(year) %>% # group the data by year
+  summarize(mean_area = mean(area, na.rm = TRUE), 
+            mean_production = mean(production, na.rm = TRUE))
+
+p <- ggplot(fruits_crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = mean_area, color = "Area"))
+
+p <- p + geom_point(aes(y = mean_production, color = "Production"))
+
+p <- p + labs(x = "Year", y = "Production", title = "Year Vs Area and production of Fruits Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("Area" = "green", "Production" = "darkblue"))
+
+print(p)
+```
+
+#### Creating a Region vs Production plot to show which region has how much production for Vegetable crops
+Plot by Satyam
+
+```{r}
+production_by_region <- aggregate(production ~ states_or_ut, data = satyam_table_2, FUN = mean, na.rm = TRUE)
+
+g2 <- ggplot(production_by_region, aes(x = states_or_ut, y = production)) +labs(x = "Region", y = "Production") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+g2 + geom_point(color="blue")
+```
+
+#### Creating a plot of Vegetable crops Area and production from 2014 - 18
+Plot by Satyam
+
+```{r}
+satyam_table_3 = read_csv("ProjectTables_Satyam_7.2.3.csv")
+
+satyam_table_3$production <- as.numeric(satyam_table_3$production)
+
+satyam_table_3$area <- as.numeric(satyam_table_3$area)
+
+vegetable_crop_means <- satyam_table_3 %>%
+  filter(type == "Vegetable Crops") %>% # select only rows where type is "Vegetable Crops"
+  group_by(year) %>% # group the data by year
+  summarize(mean_area = mean(area, na.rm = TRUE), 
+            mean_production = mean(production, na.rm = TRUE))
+
+p <- ggplot(vegetable_crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = mean_area, color = "Area"))
+
+p <- p + geom_point(aes(y = mean_production, color = "Production"))
+
+p <- p + labs(x = "Year", y = "Production", title = "Year Vs Area and production of Vegetable Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("Area" = "red", "Production" = "green"))
+
+print(p)
+```
+
+#### Creating a Region vs Production plot to show which region has how much production for Vegetable crops
+Plot by Satyam
+
+```{r}
+production_by_region <- aggregate(production ~ states_or_ut, data = satyam_table_3, FUN = mean, na.rm = TRUE)
+
+g2 <- ggplot(production_by_region, aes(x = states_or_ut, y = production)) +labs(x = "Region", y = "Production") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+g2 + geom_point(color="blue")
+```
+
+## Data Analysis for State wise area and production 
+Satyam's Tables: 7.2.2 to 7.2.5 & Shyam's Tables- 7.2.5 to 7.2.6
+
+#### Plot to show Biggest Area consumer State for each Horticulture Crop: 2014-18
+Plot by Shyam
+```{r}
+crop_data = read_csv("tables_7.2.2_to_7.2.8_satyam_shyam.csv")
+
+top_producer_states <- crop_data %>%
+  group_by(year, type) %>%
+  filter(area == max(area)) %>%
+  select(year, type, states_or_ut, production)
+
+
+ggplot(top_producer_states, aes(x = year, y = type, color = states_or_ut)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Type", color = "State/UT") +
+  ggtitle("Biggest Area consumer State for each Horticulture Crop: 2014-18")
+```
+
+#### Highest Producer State for each Horticulture Crop: 2014-18
+Plot by Shyam
+```{r}
+crop_data = read_csv("tables_7.2.2_to_7.2.8_satyam_shyam.csv")
+
+top_producer_states <- crop_data %>%
+  group_by(year, type) %>%
+  filter(production == max(production)) %>%
+  select(year, type, states_or_ut, production)
+
+
+ggplot(top_producer_states, aes(x = year, y = type, color = states_or_ut)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Type", color = "State/UT") +
+  ggtitle("highest Producer State for each Horticulture Crop: 2014-18")
+```
+
+### Explanation
+This data shows shows the leading producer state of each type of horticulture crop from 2014 to 2018. This graph is to be compared with biggest area occupier for each type of crop from 2014-18.
+
+
+
+
+#### Plot to show production statistics of diffrent crops from 2014 - 18
+Plot by Satyam
+```{r}
+data_subset <- crop_data %>%
+  select(states_or_ut, year, type, production)
+
+required_states <- c("ANDHRA PRADESH", "GUJRAT", "KERALA", "MADHYA PRADESH", "MAHARASHTRA", "PUNJAB", "RAJASTHAN", "TAMILNADU", "UTTAR PRADESH", "WEST BENGAL")
+data_subset_filtered <- data_subset %>%
+  filter(states_or_ut %in% required_states)
+
+data_grouped <- data_subset_filtered %>%
+  group_by(type, year) %>%
+  summarise(total_production = sum(production))
+
+ggplot(data_grouped, aes(x = year, y = total_production)) +
+  geom_line() +
+  facet_wrap(~type, ncol = 2, scales = "free_y") +
+  labs(title = "Production data for required states and union territories",
+       x = "Year",
+       y = "Production") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Explanation
+This data explains the production statistics for all different types of Horticulture crops from 2014-2018. Here we have used line because we had consistent data for all the years. It is preferable to use bar for these type of plots when the data is inconsistent.
+
+
+
+#### Region vs production graph for all the crops
+Plot by Shyam
+```{r}
+crop_data = read_csv("tables_7.2.2_to_7.2.8_satyam_shyam.csv")
+
+production_by_region <- aggregate(production ~ states_or_ut, data = crop_data, FUN = mean, na.rm = TRUE)
+
+g2 <- ggplot(production_by_region, aes(x = states_or_ut, y = production)) +labs(x = "Region", y = "Production")
+
+g2 + geom_point(color="blue") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Plot to show the change in Area of fruits, plantation and vegetable over the year from 2014 -18
+Plot by Shyam
+```{r}
+crop_means <- crop_data %>%
+  filter(type == "Fruits Crops") %>% # select only rows where type is "Fruits Crops"
+  group_by(year) %>% # group the data by year
+  summarize(area_of_fruits = mean(area, na.rm = TRUE))
+
+veggies <- subset(crop_data, type == "Vegetable Crops")
+
+means <- aggregate(area ~ year, data = veggies, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "area"] <- "area_of_vegetable"
+
+plantation <- subset(crop_data, type == "Plantation Crop")
+
+means <- aggregate(area ~ year, data = plantation, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "area"] <- "area_of_plantation"
+
+p <- ggplot(crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = area_of_fruits, color = "area_of_fruits"))
+
+p <- p + geom_point(aes(y = area_of_vegetable, color = "area_of_vegetable"))
+
+p <- p + geom_point(aes(y = area_of_plantation, color = "area_of_plantation"))
+
+p <- p + labs(x = "Year", y = "Area", title = "Year Vs Area of Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("area_of_fruits" = "green", "area_of_vegetable" = "darkblue", "area_of_plantation" = "red"))
+
+print(p)
+```
+
+#### Plot to show the change in Area of flowers, medicinal and spice over the year from 2014 -18
+Plot by Shyam
+```{r}
+crop_means <- crop_data %>%
+  filter(type == "Spice Crops") %>% # select only rows where type is "Fruits Crops"
+  group_by(year) %>% # group the data by year
+  summarize(area_of_spice = mean(area, na.rm = TRUE))
+
+flowers <- subset(crop_data, type == "flowers")
+
+means <- aggregate(area ~ year, data = flowers, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "area"] <- "area_of_flowers"
+
+medicinal <- subset(crop_data, type == "Aromatics & Medicinal Plants")
+
+means <- aggregate(area ~ year, data = medicinal, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "area"] <- "area_of_medicinal"
+
+p <- ggplot(crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = area_of_spice, color = "area_of_spice"))
+
+p <- p + geom_point(aes(y = area_of_flowers, color = "area_of_flowers"))
+
+p <- p + geom_point(aes(y = area_of_medicinal, color = "area_of_medicinal"))
+
+p <- p + labs(x = "Year", y = "Area", title = "Year Vs Area of Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("area_of_spice" = "blue", "area_of_flowers" = "purple", "area_of_medicinal" = "brown"))
+
+print(p)
+```
+
+#### Region vs production graph for all the crops
+Plot by Shyam
+```{r}
+area_by_region <- aggregate(area ~ states_or_ut, data = crop_data, FUN = mean, na.rm = TRUE)
+
+g2 <- ggplot(area_by_region, aes(x = states_or_ut, y = area)) +labs(x = "Region", y = "Area")
+
+g2 + geom_point(color="purple") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+```
+
+
+#### Plot to show the change in production of fruits, plantation and vegetable over the year from 2014 -18
+Plot by Satyam
+```{r}
+crop_means <- crop_data %>%
+  filter(type == "Fruits Crops") %>% # select only rows where type is "Fruits Crops"
+  group_by(year) %>% # group the data by year
+  summarize(production_of_fruits = mean(production, na.rm = TRUE))
+
+veggies <- subset(crop_data, type == "Vegetable Crops")
+
+means <- aggregate(production ~ year, data = veggies, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "production"] <- "production_of_vegetable"
+
+plantation <- subset(crop_data, type == "Plantation Crop")
+
+means <- aggregate(production ~ year, data = plantation, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "production"] <- "production_of_plantation"
+
+p <- ggplot(crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = production_of_fruits, color = "production_of_fruits"))
+
+p <- p + geom_point(aes(y = production_of_vegetable, color = "production_of_vegetable"))
+
+p <- p + geom_point(aes(y = production_of_plantation, color = "production_of_plantation"))
+
+p <- p + labs(x = "Year", y = "Area", title = "Year Vs Area of Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("production_of_fruits" = "green", "production_of_vegetable" = "darkblue", "production_of_plantation" = "red"))
+
+print(p)
+```
+
+#### Plot to show the change in production of Spice, Flower and Medicinal over the year from 2014 -18
+Plot by Satyam
+```{r}
+crop_means <- crop_data %>%
+  filter(type == "Spice Crops") %>% # select only rows where type is "Fruits Crops"
+  group_by(year) %>% # group the data by year
+  summarize(production_of_spice = mean(production, na.rm = TRUE))
+
+flowers <- subset(crop_data, type == "flowers")
+
+means <- aggregate(production ~ year, data = flowers, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "production"] <- "production_of_flowers"
+
+medicinal <- subset(crop_data, type == "Aromatics & Medicinal Plants")
+
+means <- aggregate(production ~ year, data = medicinal, FUN = mean)
+
+crop_means <- merge(crop_means, means, by = "year", all.x = TRUE)
+
+colnames(crop_means)[colnames(crop_means) == "production"] <- "production_of_medicinal"
+
+p <- ggplot(crop_means, aes(x = year))
+
+p <- p + geom_point(aes(y = production_of_spice, color = "production_of_spice"))
+
+p <- p + geom_point(aes(y = production_of_flowers, color = "production_of_flowers"))
+
+p <- p + geom_point(aes(y = production_of_medicinal, color = "production_of_medicinal"))
+
+p <- p + labs(x = "Year", y = "Area", title = "Year Vs Area of Crops") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+p <- p + scale_color_manual(name = "Area", values = c("production_of_spice" = "blue", "production_of_flowers" = "purple", "production_of_medicinal" = "brown"))
+
+print(p)
+```
+
+## Sukesh's Data- Analysed tables 07_02_08, 07_02_10, 07_02_12, 07_02_14 and 07_02_16
+All graph listed below are plotted  by Sukesh
+#### Plot to show Highest Share of each Horticulture crop 2018
+
+```{r}
+crop_data = read_csv("tables_7.2.8_to_7.2.16_Sukesh.csv")
+
+max_share <- crop_data %>%
+  group_by(crop) %>%
+  summarise(max_share = max(share),
+            state_or_ut = states_or_ut[which.max(share)])
+
+ggplot(max_share, aes(x = crop, y = max_share)) +
+  geom_bar(stat = "identity", fill = "green") +
+  xlab("Type") +
+  ylab("Maximum Share") +
+  ggtitle("Highest Share of each Horticulture crop 2018") +
+  # Add state/UT names to the top of the bars
+  geom_text(aes(label = state_or_ut), vjust = -0.5) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Plot of production vs region
+
+```{r}
+sukesh_data = read_csv("tables_7.2.8_to_7.2.16_Sukesh.csv", )
+
+production_analysis <- aggregate(production ~ states_or_ut, data = sukesh_data, FUN = function(x) mean(x, na.rm = TRUE))
+
+g2 <- ggplot(production_analysis, aes(x = states_or_ut, y = production)) +labs(x = "Region", y = "Production")
+
+g2 + geom_point(color="blue") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Plot of production vs Diffrent Crop type
+
+```{r}
+production_analysis <- aggregate(production ~ crop, data = sukesh_data, FUN = function(x) mean(x, na.rm = TRUE))
+
+g2 <- ggplot(production_analysis, aes(x = crop, y = production)) +labs(x = "Crop Type", y = "Production")
+
+g2 + geom_point(color="purple") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Plot of Share in % vs Diffrent Crop type
+
+```{r}
+production_analysis <- aggregate(share ~ crop, data = sukesh_data, FUN = function(x) mean(x, na.rm = TRUE))
+
+g2 <- ggplot(production_analysis, aes(x = crop, y = share)) +labs(x = "Crop Type", y = "share in %")
+
+g2 + geom_point(color="purple") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+#### Plot of Production Share in % vs region
+
+```{r}
+production_analysis <- aggregate(share ~ states_or_ut, data = sukesh_data, FUN = function(x) mean(x, na.rm = TRUE))
+
+g2 <- ggplot(production_analysis, aes(x = states_or_ut, y = share)) +labs(x = "Region", y = "Share in %")
+
+g2 + geom_point(color="blue") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+```
+
+### Summary & Data Explanation 
+India is one of the leading horticulture producing countries in the world. The horticulture sector in India includes fruits, vegetables, flowers, spices, and plantation crops. The "Horticultural Statistics at a Glance-2018" report provides an in-depth analysis of the horticulture sector in India, including the state-wise area and production of horticulture crops for the year 2017-18.
+The opening table in section 7.2.1 of the report provides an overview of horticulture crop area and production across states in the 2017-18 year. This table covers a range of crops, including fruits, vegetables, flowers, and spices. The table reveals that Andhra Pradesh is the leading state in terms of horticulture crop production, followed by Uttar Pradesh, Tamil Nadu, and Karnataka.
+Table 7.2.2 delves into fruit crops and presents information on fruit area and production in India's different states from 2014 to 2018. The table shows that Maharashtra is the leading producer of fruits, followed by Andhra Pradesh, Uttar Pradesh, and Tamil Nadu. The table also reveals that the production of fruit crops has seen a gradual rise from 2016 onwards.
+Tables 7.2.3 to 7.2.7 cover vegetable crops, loose flowers, spice crops, aromatic and medicinal crops, and plantation crops, respectively. Table 7.2.3 provides data on the area and production of vegetable crops across different states of India from 2014 to 2018. The table shows that West Bengal is the leading producer of vegetables, followed by Uttar Pradesh, Bihar, and Maharashtra. However, the table also reveals that vegetable crop production has seen a sharp fall from 2016 to 2017.
+Table 7.2.4 covers loose flowers and presents data on the area and production of flowers across different states of India from 2014 to 2018. The table shows that Tamil Nadu has been the sole leading producer of loose flowers from 2014-2018, but since 2015, Jammu & Kashmir has allocated the biggest area for flower production. However, the production of loose flowers has fallen from 2016 to 2017 and then sharply increased from 1400 metric tonnes to 1900 metric tonnes.
+Table 7.2.5 provides data on the area and production of spice crops across different states of India from 2014 to 2018. The table shows that Kerala is the leading producer of spices, followed by Karnataka, Andhra Pradesh, and Tamil Nadu. However, the production of spice crops has remained relatively stable over the years.
+Table 7.2.6 covers aromatic and medicinal crops and provides data on the area and production of these crops across different states of India from 2014 to 2018. The table shows that the production of aromatic and medicinal crops has seen a steep decline since 2016.
+Table 7.2.7 covers plantation crops and provides data on the area and production of these crops across different states of India from 2014 to 2018. The table shows that Andhra Pradesh is the leading producer of plantation crops, followed by Karnataka, Tamil Nadu, and Kerala. The production of plantation crops has risen sharply from 2014 onwards.
+The final set of tables in the section, 7.2.8 to 7.2.16, list out the top ten producer states for each crop type in the year 2018 and their production share. These tables provide valuable insights into the geographical distribution of horticulture crops in India and the production levels of different states.
+The data presented in the tables offers valuable insights into the production trends of various horticultural crops in India. One of the key observations is that Tamil Nadu has been the leading producer of loose flowers from 2014 to 2018. However, since 2015, Jammu & Kashmir has allocated the largest area for flower production. This shift could indicate the potential for increased flower production in Jammu & Kashmir in the future.
+Another notable observation is the decline in production of aromatic and medicinal crops since 2016. This could be due to various factors such as changes in demand, climate conditions, and government policies. On the other hand, fruit crops have seen a gradual rise in production from 2016 onwards, while plantation crops have shown a sharp increase since 2014. This growth in production could be attributed to the increased adoption of modern cultivation techniques, better access to technology and infrastructure, and favorable government policies.
+The tables also reveal a sharp fall in the production of vegetable crops from 2016 to 2017. This could be due to factors such as pests and diseases, unfavorable weather conditions, and water scarcity. However, it is encouraging to see that flower production has increased sharply from 1400 mt to 1900 mt(metric tonne) after a fall in 2016 to 2017. This rise in flower production could be due to an increase in demand, better market opportunities, and improved cultivation practices.
+Overall, these observations highlight the need for continuous monitoring of horticultural production trends and addressing challenges faced by farmers. The government can provide support through various initiatives such as promoting research and development, providing better access to credit, improving infrastructure and irrigation facilities, and encouraging sustainable cultivation practices.
+In terms of the challenges faced in categorizing the tables, it is not uncommon to encounter such issues when dealing with large amounts of data. The process of categorizing and organizing data can be time-consuming and complex, especially when dealing with multiple tables. However, it is essential to ensure that the data is presented in an easily understandable format for policymakers, researchers, and farmers. Dividing the tables into separate CSV files is a useful strategy to make the data more accessible and organized, and it can help in efficient data analysis.
+In conclusion, the data presented in the tables provides valuable information on horticultural production trends in India. The observations highlight the need for continuous monitoring and support for the horticulture sector, especially in addressing challenges such as pest and disease management, climate change, and water scarcity. The challenges faced in categorizing the tables underscore the importance of efficient data management and organization, which is essential for effective decision-making and planning in the horticulture sector.
